@@ -74,8 +74,8 @@
 
     // Inicializar mapa
     const map = L.map('map').setView([latDestino, lonDestino], 14);
-    L.tileLayer('https://tile.jawg.io/jawg-streets/{z}/{x}/{y}.png?access-token=U1E9pDPqB38Tk8lQebsZTPUDsOXw7uIGSV8QezGnGH7nlUgNaH1mAnbQk9rkaM97', {
-      attribution: '© OpenStreetMap, © JawgMaps',
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
       maxZoom: 19
     }).addTo(map);
 
