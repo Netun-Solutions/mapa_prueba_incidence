@@ -4,124 +4,102 @@
   <meta charset="utf-8">
   <title>Llegada de tu grúa · Netun</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 1. TIPOGRAFÍA & VARIABLES DE MARCA -->
+  <!-- Tipografía -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      /* Paleta Incidence → morado ↔ cian */
-      --brand-1: #5d4bff;
-      --brand-2: #23c8ff;
-      --bg:       #f5f7ff;
-      --text:     #0f1025;
-      --glass:    rgba(255,255,255,0.35);
+    :root{
+      --brand-1:#5d4bff; /* morado */
+      --brand-2:#23c8ff; /* cian */
+      --bg:#f5f7ff;
+      --text:#0f1025;
+      --glass:rgba(255,255,255,.35);
     }
-    /* 2. RESETEO BÁSICO */
     *,*::before,*::after{box-sizing:border-box;}
-    html,body{margin:0;height:100%;font-family:'Inter',Arial,sans-serif;color:var(--text);background:var(--bg);}
+    html,body{margin:0;height:100%;font-family:'Inter',Arial,sans-serif;color:var(--text);background:var(--bg);}  
 
-    /* 3. ENCABEZADO FLUIDO */
-    #header{
-      position:absolute;inset:0 0 auto 0;padding:clamp(14px,3vw,24px);
-      display:flex;flex-direction:column;gap:6px;
-      background:linear-gradient(90deg,var(--brand-1) 10%,var(--brand-2) 100%);
-      color:#fff;border-bottom-left-radius:18px;border-bottom-right-radius:18px;
-      box-shadow:0 6px 28px rgba(0,0,0,0.12);
-      z-index:999;
-      backdrop-filter:saturate(160%) blur(6px);
-    }
+    /* Encabezado “glass” */
+    #header{position:absolute;inset:0 0 auto 0;padding:clamp(14px,3vw,24px);display:flex;flex-direction:column;gap:6px;background:linear-gradient(90deg,var(--brand-1) 10%,var(--brand-2) 100%);color:#fff;border-bottom-left-radius:18px;border-bottom-right-radius:18px;backdrop-filter:saturate(160%) blur(6px);box-shadow:0 6px 28px rgba(0,0,0,.12);z-index:999;}
     #header h2{margin:0;font-size:clamp(18px,4vw,22px);font-weight:600;letter-spacing:.2px;}
     #eta{font-size:clamp(15px,4vw,18px);font-weight:600;}
 
     /* Barra de progreso */
-    .progress-shell{
-      width:100%;max-width:360px;height:10px;border-radius:6px;overflow:hidden;background:var(--glass);
-    }
-    .progress-bar{
-      height:100%;width:0%;transition:width .35s linear;
-      background:linear-gradient(90deg,#fff 0%,#fff 40%,rgba(255,255,255,.2) 100%);
-    }
+    .progress-shell{width:100%;max-width:360px;height:10px;border-radius:6px;background:var(--glass);overflow:hidden;}
+    .progress-bar{height:100%;width:0%;transition:width .35s linear;background:linear-gradient(90deg,#fff 0%,#fff 40%,rgba(255,255,255,.2) 100%);}  
 
-    /* 4. MAPA DE FONDO */
+    /* Mapa */
     #map{position:absolute;inset:72px 0 0 0;}
     @media(max-width:500px){#map{inset:64px 0 0 0;}}
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <!-- ENCABEZADO -->
   <header id="header">
     <h2>Tu grúa está en camino</h2>
     <div id="eta">Calculando…</div>
     <div class="progress-shell"><div class="progress-bar" id="progress-bar"></div></div>
   </header>
-  <!-- MAPA -->
   <div id="map"></div>
 
-  <!-- LIBRERÍAS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-  /* 5. ICONOS */
-  const iconGrua = L.icon({iconUrl:'https://img.icons8.com/color/48/tow-truck.png',iconSize:[48,48],iconAnchor:[24,46]});
-  const iconCoche = L.icon({iconUrl:'https://img.icons8.com/color/48/car--v1.png',iconSize:[40,40],iconAnchor:[20,36]});
+  // Icono de la grúa
+  const iconGrua=L.icon({iconUrl:'https://img.icons8.com/color/48/tow-truck.png',iconSize:[48,48],iconAnchor:[24,46]});
 
-  /* 6. PARAMETROS & PUNTO INICIAL */
-  const params       = new URLSearchParams(location.search);
-  const latDestino   = parseFloat(params.get('lat'))  || 40.4168;   // fallback Madrid
-  const lonDestino   = parseFloat(params.get('lon'))  || -3.7038;
-  const offsetKm     = .01;  // ~1 km
-  const latGruaStart = latDestino + offsetKm;
-  const lonGruaStart = lonDestino + offsetKm;
+  // Parámetros recibidos (lat/lon) o fallback Madrid
+  const params=new URLSearchParams(location.search);
+  const latDestino=parseFloat(params.get('lat'))||40.4168;
+  const lonDestino=parseFloat(params.get('lon'))||-3.7038;
+  const offset=0.01; // ~1 km NE
+  const latGruaStart=latDestino+offset;
+  const lonGruaStart=lonDestino+offset;
 
-  /* 7. MAPA */
-  const map = L.map('map',{zoomControl:false}).setView([latDestino,lonDestino],14);
+  // Mapa
+  const map=L.map('map',{zoomControl:false}).setView([latDestino,lonDestino],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
 
-  /* 8. MARCADORES */
-  const cocheMarker = L.marker([latDestino,lonDestino],{icon:iconCoche}).addTo(map).bindPopup('Tu coche').openPopup();
-  const gruaMarker  = L.marker([latGruaStart,lonGruaStart],{icon:iconGrua}).addTo(map).bindPopup('Grúa en camino');
+  // Marcador grúa
+  const gruaMarker=L.marker([latGruaStart,lonGruaStart],{icon:iconGrua}).addTo(map).bindPopup('Grúa en camino');
 
-  /* 9. RUTA » Open-Source Routing Machine */
+  // Obtener ruta (OSRM)
   async function fetchRoute(){
-    const url = `https://router.project-osrm.org/route/v1/driving/${lonGruaStart},${latGruaStart};${lonDestino},${latDestino}?overview=full&geometries=geojson`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if(!data?.routes?.[0]) throw Error('No se pudo calcular la ruta');
+    const url=`https://router.project-osrm.org/route/v1/driving/${lonGruaStart},${latGruaStart};${lonDestino},${latDestino}?overview=full&geometries=geojson`;
+    const res=await fetch(url);
+    const data=await res.json();
+    if(!data?.routes?.[0])throw Error('No se pudo calcular la ruta');
     return data.routes[0];
   }
 
-  /* 10. ANIMACIÓN – LA MAGIA */
   fetchRoute().then(route=>{
-    const coords        = route.geometry.coordinates.map(([lng,lat])=>[lat,lng]);
-    const durationSec   = route.duration;
-    const routeAhead    = L.polyline(coords,{color:'#5d4bff',weight:8,opacity:.85,dashArray:'12 8',lineCap:'round'}).addTo(map);
-    const halo          = L.polyline(coords,{color:'#bcd2ff',weight:20,opacity:.15,lineCap:'round'}).addTo(map);
-    map.fitBounds(routeAhead.getBounds().pad(.25));
+    const coords=route.geometry.coordinates.map(([lng,lat])=>[lat,lng]);
+    const durationSec=15*60; // 15 min fijos
 
-    const totalSteps    = coords.length;
-    let step            = 0;
-    const bar           = document.getElementById('progress-bar');
-    const etaLabel      = document.getElementById('eta');
+    // Línea continua estilo Uber
+    const line=L.polyline(coords,{color:'#23c8ff',weight:8,opacity:.9,lineCap:'round'}).addTo(map);
+    const halo=L.polyline(coords,{color:'#bff3ff',weight:20,opacity:.15,lineCap:'round'}).addTo(map);
+
+    map.fitBounds(line.getBounds().pad(.25));
+
+    // Animación
+    const totalSteps=coords.length;
+    let step=0;
+    const bar=document.getElementById('progress-bar');
+    const eta=document.getElementById('eta');
 
     function tick(){
       if(step>=totalSteps){
         gruaMarker.setLatLng(coords[totalSteps-1]);
         bar.style.width='100%';
-        etaLabel.textContent='¡La grúa ha llegado!';
+        eta.textContent='¡La grúa ha llegado!';
         gruaMarker.bindPopup('¡La grúa ha llegado!').openPopup();
         return;
       }
-      // mover marcador
       gruaMarker.setLatLng(coords[step]);
-      // recortar la línea – Uber-style
-      routeAhead.setLatLngs(coords.slice(step));
+      line.setLatLngs(coords.slice(step));
       halo.setLatLngs(coords.slice(step));
-
-      // progreso
       bar.style.width=((step/totalSteps)*100).toFixed(2)+'%';
-      const minRest = Math.max(0,Math.ceil(((totalSteps-step)*durationSec/totalSteps)/60));
-      etaLabel.textContent = minRest<=1 ? '¡Grúa llegando!' : `Llegada estimada · ${minRest} min`;
-
+      const minRest=Math.max(0,Math.ceil(((totalSteps-step)*durationSec/totalSteps)/60));
+      eta.textContent=minRest<=1?'¡Grúa llegando!':`Llegada estimada · ${minRest} min`;
       step++;
       setTimeout(tick,durationSec*1000/totalSteps);
     }
